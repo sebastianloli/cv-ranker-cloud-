@@ -59,23 +59,26 @@ Toda la lógica es asíncrona: el frontend nunca espera bloqueado a que termine 
 
 ## Estructura del repositorio
 
+Este repo concentra la **documentación, el diagrama y los datos de prueba**. El código de cada componente vive en su propio repositorio (ver abajo).
+
 ```
 cv-ranker-cloud/
-├── README.md                 # este archivo
+├── README.md                 # este archivo (índice de la entrega)
 ├── docs/
 │   ├── contexto.md           # problema, casos de uso e impacto
 │   ├── despliegue.md         # manual de despliegue paso a paso (LabRole)
 │   ├── arquitectura.drawio   # fuente editable del diagrama
 │   └── arquitectura.png      # diagrama exportado
-├── infra/
-│   └── template.yaml         # CloudFormation: S3, SQS+DLQ, DynamoDB, API Gateway, Lambdas
-├── backend/                  # código de las Lambdas (CreateJob, Worker, GetResults)
-├── frontend/                 # app React (formulario + ranking)
 └── data/
-    └── cvs_dummy/            # 28 CVs de prueba en PDF + manifest
+    └── cvs_dummy/            # 28 CVs de prueba en PDF + _manifest.csv
 ```
 
-Repos por componente: [backend](https://github.com/RafaCH1906/Back_read_CV) · [frontend](https://github.com/AE00NN/Frontend-Hackathon-CC)
+**Código por componente:**
+
+| Componente | Repositorio |
+|---|---|
+| Backend (Lambdas + infra CloudFormation) | https://github.com/RafaCH1906/Back_read_CV |
+| Frontend (React) | https://github.com/AE00NN/Frontend-Hackathon-CC |
 
 ---
 
@@ -126,34 +129,17 @@ Modelo de datos en DynamoDB (single-table): `PK = job_id`, `SK = "META"` para la
 
 ---
 
-## Despliegue rápido
+## Despliegue
 
-> Manual completo y detallado en [`docs/despliegue.md`](docs/despliegue.md).
+La solución está repartida en tres repos y se despliega en este orden:
 
-Pensado para **AWS Academy Learner Lab** (us-east-1). No crea roles IAM: usa el `LabRole` existente como execution role, por lo que es reproducible en la misma cuenta que tendrá el evaluador.
+1. **Backend** → clonar el [repo del backend](https://github.com/RafaCH1906/Back_read_CV) y desplegar la infra con CloudFormation (genera el endpoint de la API).
+2. **Frontend** → clonar el [repo del frontend](https://github.com/AE00NN/Frontend-Hackathon-CC), apuntar la URL de la API al endpoint del backend y generar el build.
+3. **Hosting** → publicar el build en un bucket S3 (static website) para obtener la URL pública.
 
-```bash
-# 1. Iniciar el lab y abrir CloudShell (us-east-1)
-export AWS_DEFAULT_REGION=us-east-1
+Pensado para **AWS Academy Learner Lab** (us-east-1): no se crean roles IAM (se usa `LabRole`), y por eso se usa CloudFormation plano + S3 static hosting en lugar de SAM/CDK/Amplify.
 
-# 2. Backend: empaquetar y desplegar
-python build_package.py                    # genera los ZIP de las Lambdas
-aws cloudformation deploy \
-  --template-file infra/template.yaml \
-  --stack-name cv-ranker \
-  --parameter-overrides GroqApiKey=<TU_API_KEY_GROQ>
-
-# 3. Ver las salidas (API endpoint, buckets, etc.)
-aws cloudformation describe-stacks --stack-name cv-ranker \
-  --query "Stacks[0].Outputs" --output table
-
-# 4. Frontend: build apuntando a la API y subir a S3
-#    (configurar la URL del API en el .env del frontend antes del build)
-npm --prefix frontend run build
-aws s3 sync frontend/dist s3://cv-frontend-<ACCOUNT_ID>
-```
-
-La URL pública es la del bucket de frontend: `http://cv-frontend-<ACCOUNT_ID>.s3-website-us-east-1.amazonaws.com`.
+👉 **Pasos detallados y solución de problemas en [`docs/despliegue.md`](docs/despliegue.md).**
 
 ---
 
@@ -186,9 +172,9 @@ Con esa vacante, los perfiles backend con Python/AWS deben quedar arriba (~75-98
 
 | Rol | Responsable | Componente |
 |---|---|---|
-| Backend / procesamiento | Rafael Rodrigo Choque Coaquira 2022410378 | Lambdas, integración Groq, infra |
-| Frontend | Henry André Valle Enriquez 202310310  | App React, UX del ranking |
-| Infraestructura / integración / docs | Sebastian Loli Gonzalez 202420022 | CloudFormation, diagrama, manual, integración |
+| Backend / procesamiento | P1 | Lambdas, integración Groq, infra |
+| Frontend | P2 | App React, UX del ranking |
+| Infraestructura / integración / docs | P3 | CloudFormation, diagrama, manual, integración |
 
 ---
 
