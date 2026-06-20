@@ -186,9 +186,9 @@ Con esa vacante, los perfiles backend con Python/AWS deben quedar arriba (~75-98
 
 | Rol | Responsable | Componente |
 |---|---|---|
-| Backend / procesamiento | P1 | Lambdas, integración Groq, infra |
-| Frontend | P2 | App React, UX del ranking |
-| Infraestructura / integración / docs | P3 | CloudFormation, diagrama, manual, integración |
+| Backend / procesamiento | Rafael Rodrigo Choque Coaquira 2022410378 | Lambdas, integración Groq, infra |
+| Frontend | Henry André Valle Enriquez 202310310  | App React, UX del ranking |
+| Infraestructura / integración / docs | Sebastian Loli Gonzalez 202420022 | CloudFormation, diagrama, manual, integración |
 
 ---
 
