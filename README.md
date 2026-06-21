@@ -51,7 +51,7 @@ Toda la lógica es asíncrona: el frontend nunca espera bloqueado a que termine 
 ## Demo en vivo
 
 - **Frontend desplegado:** https://main.d2ydxzg8o7v1ni.amplifyapp.com/
-- **Video demo (YouTube):** `⬜ <link del video>`
+- **Video demo (YouTube):** https://drive.google.com/drive/folders/1WFf5wpGCP22TS9GGRO0JUoekKUlJXNDS?usp=sharing
 
 > Reemplazar los placeholders al cerrar el despliegue público y subir el video.
 
