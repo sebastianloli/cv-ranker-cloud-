@@ -37,7 +37,7 @@ Toda la lógica es asíncrona: el frontend nunca espera bloqueado a que termine 
 
 | Componente | Servicio AWS |
 |---|---|
-| Frontend (React) | S3 static website |
+| Frontend (React) | AWS Amplify Hosting |
 | API REST | API Gateway (HTTP API) |
 | Orquestación | Lambda (CreateJob, Worker, GetResults) |
 | Subida de archivos | S3 + presigned URLs |
@@ -50,7 +50,7 @@ Toda la lógica es asíncrona: el frontend nunca espera bloqueado a que termine 
 
 ## Demo en vivo
 
-- **Frontend desplegado:** `⬜ <URL pública del bucket S3>`
+- **Frontend desplegado:** https://main.d2ydxzg8o7v1ni.amplifyapp.com/
 - **Video demo (YouTube):** `⬜ <link del video>`
 
 > Reemplazar los placeholders al cerrar el despliegue público y subir el video.
@@ -135,9 +135,9 @@ La solución está repartida en tres repos y se despliega en este orden:
 
 1. **Backend** → clonar el [repo del backend](https://github.com/RafaCH1906/Back_read_CV) y desplegar la infra con CloudFormation (genera el endpoint de la API).
 2. **Frontend** → clonar el [repo del frontend](https://github.com/AE00NN/Frontend-Hackathon-CC), apuntar la URL de la API al endpoint del backend y generar el build.
-3. **Hosting** → publicar el build en un bucket S3 (static website) para obtener la URL pública.
+3. **Hosting** → conectar el repo del frontend a **AWS Amplify** (build `npm run build`, output `dist`) para obtener la URL pública.
 
-Pensado para **AWS Academy Learner Lab** (us-east-1): no se crean roles IAM (se usa `LabRole`), y por eso se usa CloudFormation plano + S3 static hosting en lugar de SAM/CDK/Amplify.
+El **backend** corre en **AWS Academy Learner Lab** (us-east-1): no se crean roles IAM (se usa `LabRole`), por eso su infra es CloudFormation plano y no SAM/CDK. El **frontend** se hostea en **AWS Amplify** conectado a GitHub.
 
 👉 **Pasos detallados y solución de problemas en [`docs/despliegue.md`](docs/despliegue.md).**
 
@@ -172,9 +172,9 @@ Con esa vacante, los perfiles backend con Python/AWS deben quedar arriba (~75-98
 
 | Rol | Responsable | Componente |
 |---|---|---|
-| Backend / procesamiento | P1 | Lambdas, integración Groq, infra |
-| Frontend | P2 | App React, UX del ranking |
-| Infraestructura / integración / docs | P3 | CloudFormation, diagrama, manual, integración |
+| Backend / procesamiento | Rafael Choque 2022410378 | Lambdas, integración Groq, infra |
+| Frontend | Henry Valle 202310310 | App React, UX del ranking |
+| Infraestructura / integración / docs | Sebastian Loli 202420022 | CloudFormation, diagrama, manual, integración |
 
 ---
 
