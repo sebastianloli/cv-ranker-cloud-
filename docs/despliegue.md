@@ -19,11 +19,12 @@ Guía paso a paso para levantar y probar el **CV Ranker** de cero. La solución 
 
 ### Nota importante sobre AWS Academy (LabRole)
 
-En Learner Lab **no se pueden crear roles IAM**: solo existe `LabRole`. Por eso esta solución:
+El **backend** corre en Learner Lab, donde **no se pueden crear roles IAM**: solo existe `LabRole`. Por eso su infraestructura:
 
 - Usa **CloudFormation plano** (no SAM/CDK, que fallan al intentar crear roles).
-- Hostea el frontend en **S3 static website** (no Amplify, que también requiere un service role y falla en el lab).
 - Referencia `LabRole` como execution role de todas las Lambdas.
+
+El **frontend** se hostea en **AWS Amplify** conectado a GitHub. Como es una app estática que solo consume la API pública del backend, no necesita vivir en la misma cuenta del Learner Lab.
 
 Además, **las credenciales del lab rotan en cada sesión**. Lo más cómodo es trabajar desde **CloudShell** (ya viene autenticado). Si usas la CLI local, recopia las 3 llaves desde *AWS Details* al reiniciar el lab.
 
@@ -92,50 +93,29 @@ Además, **las credenciales del lab rotan en cada sesión**. Lo más cómodo es 
 
 ---
 
-## Parte 3 — Hostear el frontend en S3 (URL pública)
+## Parte 3 — Publicar el frontend en AWS Amplify (URL pública)
 
-Estos pasos van en **CloudShell de tu cuenta** (la del integrador). El frontend es estático y llama a la API pública del backend, así que puede vivir en cualquier cuenta.
+El frontend se hostea en **AWS Amplify** conectado directamente al repo de GitHub. Amplify autodetecta el build de Vite y publica la app en una URL pública con HTTPS.
 
-1. Crea el bucket (el nombre debe ser único a nivel global):
-   ```bash
-   export FE_BUCKET=cv-frontend-publico-<ALGO_UNICO>
-   aws s3 mb s3://$FE_BUCKET
-   ```
-2. Habilita el hosting de sitio estático:
-   ```bash
-   aws s3 website s3://$FE_BUCKET/ --index-document index.html --error-document index.html
-   ```
-3. Desbloquea el acceso público del bucket:
-   ```bash
-   aws s3api put-public-access-block --bucket $FE_BUCKET \
-     --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
-   ```
-4. Aplica una política de lectura pública:
-   ```bash
-   cat > policy.json <<EOF
-   {
-     "Version": "2012-10-17",
-     "Statement": [{
-       "Sid": "PublicRead",
-       "Effect": "Allow",
-       "Principal": "*",
-       "Action": "s3:GetObject",
-       "Resource": "arn:aws:s3:::$FE_BUCKET/*"
-     }]
-   }
-   EOF
-   aws s3api put-bucket-policy --bucket $FE_BUCKET --policy file://policy.json
-   ```
-5. Sube el build (la carpeta `dist/` de la Parte 2):
-   ```bash
-   aws s3 sync dist/ s3://$FE_BUCKET/
-   ```
-6. **Tu URL pública** es:
-   ```
-   http://<FE_BUCKET>.s3-website-us-east-1.amazonaws.com
-   ```
+1. En la consola de AWS, entra a **AWS Amplify** → **Create new app** → **Host web app**.
+2. Conecta el proveedor **GitHub** y autoriza el acceso al repositorio `AE00NN/Frontend-Hackathon-CC`.
+3. Selecciona la rama **`main`**.
+4. Amplify detecta el framework (Vite). Confirma la configuración de build:
+   - **Build command:** `npm run build`
+   - **Output directory (baseDirectory):** `dist`
+5. (SPA) Para que las rutas internas no rompan al refrescar, agrega una *rewrite rule* en **App settings → Rewrites and redirects**:
+   - Source: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>`
+   - Target: `/index.html` · Type: `200 (Rewrite)`
+6. **Save and deploy.** Amplify buildea y publica.
+
+La **URL pública** queda con la forma `https://main.<APP_ID>.amplifyapp.com`. Cada push a `main` redespliega automáticamente.
+
+> **Importante:** la URL de la API está hardcodeada en `src/api.js`. Si cambia el endpoint del backend, edita esa línea, haz commit y push, y Amplify reconstruye solo.
 
 ✅ Esa es la URL que va en el entregable (criterio 4) y en el README.
+
+> *Alternativa (S3 + CloudFront):* si por algún motivo no usas Amplify, también puedes servir el `dist/` desde un bucket S3 con static website hosting + acceso público, configurando que los 404 redirijan a `index.html` (la app es una SPA con rutas). Amplify es la vía recomendada por simplicidad y porque ya está en uso.
+
 
 ---
 
@@ -164,7 +144,7 @@ Estos pasos van en **CloudShell de tu cuenta** (la del integrador). El frontend 
 | El upload del CV a S3 falla con error de firma | El `PUT` debe incluir el header `Content-Type: application/pdf` y el archivo debe ser un PDF real. |
 | El upload falla por CORS | El bucket de uploads del backend debe tener CORS con `AllowedOrigins: ["*"]` (ya viene así en el template de P1). |
 | La presigned URL da error "expired" | Caduca a los 15 min. Vuelve a crear la vacante para generar URLs frescas. |
-| El frontend no carga / 403 | Revisa que aplicaste la política pública (Parte 3, pasos 3 y 4) y que subiste `dist/`, no la carpeta del proyecto. |
+| El frontend carga pero las rutas rompen al refrescar | Falta la *rewrite rule* a `/index.html` en Amplify (Parte 3, paso 5). Es una SPA. |
 | El ranking no avanza | Revisa los logs de la Lambda `worker` en CloudWatch. Verifica que `GroqApiKey` quedó seteada en el deploy. |
 
 ---
